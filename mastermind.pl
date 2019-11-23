@@ -25,6 +25,12 @@ checkSize(A,S) :- 2 > A, initCodeSize(S).
 checkSize(A,S) :- A > 10, initCodeSize(S).
  
 
+% Generate max number of tries
+% S: Size of code, C: Number of colors
+genMaxT(_, _, MaxT) :- MaxT is 20.
+
+
+
 % Translate S colors to integers.
 % [H|T]: Code in colors, C: Code in integers
 colToInt([], []).
@@ -50,14 +56,6 @@ readln(Ln1), checkLine(Ln1,S, Co, CLn).
 % Ln: List of colors, Co: Number of different colors.
 checkColors([],_).
 checkColors([H|T],Co) :- color(CH,H), -1 < CH, CH < Co, checkColors(T,Co).
-
-
-% Check if the result of match is only 1s (meaning the guess is correct and the game has been won)
-winningGuess([H|[]]) :- 
-    H = 1.
-winningGuess([H|T]) :- 
-    H = 1,
-    winningGuess(T).
 
 
 % accumulator initilization
@@ -88,49 +86,21 @@ posmatch([X|CodeT], [Y|MoveT], CodeRes, MoveRes, A, Res) :- %when color and posi
     posmatch(CodeT, MoveT, [X|CodeRes], [Y|MoveRes], A, Res).
 
 
+% Guess
+% S: Size of code, C: Code in integers, Co: Number of different colors, Res: Result of guess
+guess(S, C, Co, Res) :- parseLine(S,Co,G), matchinit(C, G, Res), write(Res), nl.
+
+
+
+
+
+
+
 % No : the number of elements we want in the code
 % Code : the resulting randomly generated code
 generateCode(No, Code) :- 
     length(Code, No), % the length of the result must match the number of input 
     maplist(random(0,10), Code). % maps list of different 
-
-%Guess
-% S: Size of code, Co: Number of different colors, C: Code in integers
-guess(S,Co) :- parseLine(S,Co,C), write(C).
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 %Show color options
@@ -156,15 +126,24 @@ color(9,purple).
 
 
 
-
+% Check if the result of match is only 1s (meaning the guess is correct and the game has been won)
+winningGuess([H|[]]) :- 
+    H = 1.
+winningGuess([H|T]) :- 
+    H = 1,
+    winningGuess(T).
 
 
 
 
 % Game
-% C: Number of colors S: Size of code
-gameloop(C,S) :- C1 is C-1, showColoroptions(C1), guess(S,C1).
+% C: Number of colors, S: Size of code, T: Number of tries used, MaxT: Total tries.
+gameloop(C, S, Co, T, MaxT) :- guess(S,C, Co, Res), winningGuess(Res), T < MaxT. - %You win
+
+gameloop(C, S, Co, T, MaxT) :- guess(S,C, Co, Res), \+ winningGuess(Res), T1 is T+1, T1 < MaxT, gameloop(C, S, Co, T1, MaxT). - %Not the correct code, try again.
+
+gameloop(C, S, Co, T, MaxT) :- guess(S,C, Co, Res), \+ winningGuess(Res), MaxT is T+1. - %Not the correct code, try again.
 
 
 % Start game
-start :- write('Welcome to my universe - Let us play a very fun game!'),nl, initColor(C), initCodeSize(S),gameloop(C,S).
+start :- write('Welcome to my universe - Let us play a very fun game!'),nl, initColor(C), initCodeSize(S), genMaxT(S,C,MaxT), generateCode(S, Co) C1 is C-1, showColoroptions(C1), gameloop(C, S, Co, 0, MaxT).

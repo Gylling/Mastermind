@@ -81,6 +81,12 @@ posmatch([X|CodeT], [Y|MoveT], CodeRes, MoveRes, A, Res) :- %when color and posi
     posmatch(CodeT, MoveT, [X|CodeRes], [Y|MoveRes], A, Res).
 
 
+% No : the number of elements we want in the code
+% Code : the resulting randomly generated code
+generateCode(No, Code) :- 
+    length(Code, No), % the length of the result must match the number of input 
+    maplist(random(0,10), Code). % maps list of different 
+
 %Guess
 % S: Size of code, Co: Number of different colors, C: Code in integers
 guess(S,Co) :- parseLine(S,Co,C), write(C).

@@ -133,7 +133,8 @@ winningGuess([H|T]) :-
     H = 1,
     winningGuess(T).
 
-
+correctSize(Guess, Size) :- 
+    length(Guess) = Size.
 
 
 % Game

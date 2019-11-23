@@ -25,25 +25,31 @@ checkSize(A,S) :- 2 > A, initCodeSize(S).
 checkSize(A,S) :- A > 10, initCodeSize(S).
  
 
-% Translate S colors to integers and checks if the line has S number of colors.
-% [H|T]: Code in colors, C: Code in integers, Cnt: Counter starting from S going to 0, S: size of code
+% Translate S colors to integers.
+% [H|T]: Code in colors, C: Code in integers
 colToInt([], []).
 colToInt([H|T], [I|R]) :- color(I,H),colToInt(T, R). 
 
 % Parse line from colors to integers. 
-% S: Size of code, C: Code in integers
-parseLine(S,Co, C):-write('Enter your guess: '), readln(Ln), checkLine(Ln,S,Co, CLn), colToInt(CLn,C).
+% S: Size of code, Co: Number of different colors, C: Code in integers
+parseLine(S, Co, C):-write('Enter your guess: '), readln(Ln), checkLine(Ln,S,Co, CLn), colToInt(CLn,C).
 
 % Checks if line has S colors.
-% Ln: List of colors, S: Number of colors in code, CLn: Correct input (Output).
+% Ln: List of colors, S: Number of colors in code,Co: Number of different colors, CLn: Correct input (Output).
 checkLine(Ln, S, Co, Ln ) :- length(Ln, S), checkColors(Ln,Co).
-checkLine(Ln, S, Co, CLn ) :- length(Ln, S), \+ checkColors(Ln,Co), write('Colors could not be recognized.'),nl,write('This is your coloroptions.'),showColoroptions(Co), write('Enter your new guess: '), readln(Ln1), checkLine(Ln1,S, CLn).
-checkLine(Ln, S, _, CLn) :- length(Ln, D), dif(S,D), write('You need to provide '),write(S),write(' colors.'),nl, write('Enter your new guess: '), readln(Ln1), checkLine(Ln1,S, CLn).
+
+checkLine(Ln, S, Co, CLn ) :- length(Ln, S), \+ checkColors(Ln,Co), 
+write('Colors could not be recognized.'),nl,
+showColoroptions(Co), write('Enter your new guess: '), readln(Ln1), checkLine(Ln1,S, Co, CLn).
+
+checkLine(Ln, S, Co, CLn) :- length(Ln, D), dif(S,D), 
+write('You need to provide '),write(S),write(' colors.'),nl, write('Enter your new guess: '), 
+readln(Ln1), checkLine(Ln1,S, Co, CLn).
 
 % Checks if colors in line is found.
-% Ln: List of colors.
+% Ln: List of colors, Co: Number of different colors.
 checkColors([],_).
-checkColors([H|T],Co) :- color(CH,H), -1< CH, CH < Co, checkColors(T).
+checkColors([H|T],Co) :- color(CH,H), -1 < CH, CH < Co, checkColors(T,Co).
 
 
 
@@ -52,10 +58,13 @@ checkColors([H|T],Co) :- color(CH,H), -1< CH, CH < Co, checkColors(T).
 matchinit(Code, Move, Res) :- posmatch(Code, Move, [], [], [], Res).
 
 colormatch([], _, _, []).
+
 colormatch([_|CodeT], [], Original, Res) :- 
     colormatch(CodeT, Original, Original, Res).
+
 colormatch([H|CodeT], [H|_], Original, [0|Res]) :-
     colormatch(CodeT, Original, Original, Res).
+
 colormatch([H|CodeT], [X|MoveT], Original, Res) :- 
     dif(H,X), 
     colormatch([H|CodeT], MoveT, Original, Res).

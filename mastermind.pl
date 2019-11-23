@@ -52,6 +52,12 @@ checkColors([],_).
 checkColors([H|T],Co) :- color(CH,H), -1 < CH, CH < Co, checkColors(T,Co).
 
 
+% Check if the result of match is only 1s (meaning the guess is correct and the game has been won)
+winningGuess([H|[]]) :- 
+    H = 1.
+winningGuess([H|T]) :- 
+    H = 1,
+    winningGuess(T).
 
 
 % accumulator initilization
@@ -68,6 +74,7 @@ colormatch([H|CodeT], [H|_], Original, [0|Res]) :-
 colormatch([H|CodeT], [X|MoveT], Original, Res) :- 
     dif(H,X), 
     colormatch([H|CodeT], MoveT, Original, Res).
+    
 
 % base case
 posmatch([], [], CodeRes, MoveRes, A, Res) :- 

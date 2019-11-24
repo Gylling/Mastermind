@@ -1,6 +1,5 @@
 % Mastermind
 
-
 %Reads one char
 readOneChar(I) :- readln([I|_]).
 
@@ -36,21 +35,29 @@ genMaxT(_, _, MaxT) :- MaxT is 20.
 colToInt([], []).
 colToInt([H|T], [I|R]) :- color(I,H),colToInt(T, R). 
 
+%Exit command
+%Ln: User input.
+exitCmd(Ln) :- dif(Ln,[exit]).
+exitCmd([exit]) :- halt.
+
+
 % Parse line from colors to integers. 
 % S: Size of code, Co: Number of different colors, C: Code in integers
-parseLine(S, Co, C):-write('Enter your guess: '), readln(Ln), checkLine(Ln,S,Co, CLn), colToInt(CLn,C).
+% parseLine(_, _, _) :-write('Enter your guess: '), readln([exit]), halt.
+parseLine(S, Co, C):-write('Enter your guess: '), readln(Ln), exitCmd(Ln), checkLine(Ln,S,Co, CLn), colToInt(CLn,C).
 
 % Checks if line has S colors.
 % Ln: List of colors, S: Number of colors in code,Co: Number of different colors, CLn: Correct input (Output).
 checkLine(Ln, S, Co, Ln ) :- length(Ln, S), checkColors(Ln,Co).
 
 checkLine(Ln, S, Co, CLn ) :- length(Ln, S), \+ checkColors(Ln,Co), 
-write('Colors could not be recognized.'),nl,
-showColoroptions(Co), write('Enter your new guess: '), readln(Ln1), checkLine(Ln1,S, Co, CLn).
+write('Colors could not be recognized.'),nl, C1 is Co - 1,
+showColoroptions(C1), write('Enter your new guess: '), readln(Ln1), exitCmd(Ln1), checkLine(Ln1,S, Co, CLn).
 
 checkLine(Ln, S, Co, CLn) :- length(Ln, D), dif(S,D), 
 write('You need to provide '),write(S),write(' colors.'),nl, write('Enter your new guess: '), 
-readln(Ln1), checkLine(Ln1,S, Co, CLn).
+readln(Ln1), exitCmd(Ln1), checkLine(Ln1,S, Co, CLn).
+
 
 % Checks if colors in line is found.
 % Ln: List of colors, Co: Number of different colors.
@@ -61,17 +68,29 @@ checkColors([H|T],Co) :- color(CH,H), -1 < CH, CH < Co, checkColors(T,Co).
 % accumulator initilization
 matchinit(Code, Move, Res) :- posmatch(Code, Move, [], [], [], Res).
 
-colormatch([], _, _, []).
 
-colormatch([_|CodeT], [], Original, Res) :- 
+remove([],_,[]).
+remove([H|T],H,T).
+remove([H|T],X,[H|R]):-dif(H,X),remove(T,X,R).
+
+
+colormatch(_, _, [], []).                           % Base case Alpha omega super mand
+
+colormatch([], [_], [_], []).                       % Base case Beta Batman
+
+colormatch([_], [], _, []).                         % Base case Gamma Robin - Hende kender vi ikke, måske skal hun bare fjernes
+
+colormatch([], [], [], []).                         % Base case Omega rosinen i pølseenden
+
+colormatch([_|CodeT], [], Original, Res) :-        % Miss
     colormatch(CodeT, Original, Original, Res).
 
-colormatch([H|CodeT], [H|_], Original, [0|Res]) :-
-    colormatch(CodeT, Original, Original, Res).
+colormatch([H|CodeT], [H|_], Original, [0|Res]) :- % hit
+    remove(Original,H,Ln), colormatch(CodeT, Ln, Ln, Res).
 
-colormatch([H|CodeT], [X|MoveT], Original, Res) :- 
+colormatch([H|CodeT], [X|MoveT], Original, Res) :- % Elements is not equal 
     dif(H,X), 
-    colormatch([H|CodeT], MoveT, Original, Res).
+    colormatch([H|CodeT], MoveT, Original, Res). 
     
 
 % base case
@@ -88,7 +107,7 @@ posmatch([X|CodeT], [Y|MoveT], CodeRes, MoveRes, A, Res) :- %when color and posi
 
 % Guess
 % S: Size of code, C: Code in integers, Co: Number of different colors, Res: Result of guess
-guess(S, C, Co, Res) :- parseLine(S,Co,G), matchinit(C, G, Res), write(Res), nl.
+guess(S, C, Co, Res) :- parseLine(S,Co,G), matchinit(C, G, Res), write(Res), nl, write(G), nl, write(C), nl.
 
 
 
@@ -97,20 +116,21 @@ guess(S, C, Co, Res) :- parseLine(S,Co,G), matchinit(C, G, Res), write(Res), nl.
 
 
 % No : the number of elements we want in the code
+% Co : the number of differ colors
 % Code : the resulting randomly generated code
-generateCode(No, Code) :- 
+generateCode(No, Co, Code) :- 
     length(Code, No), % the length of the result must match the number of input 
-    maplist(random(0,10), Code). % maps list of different 
+    maplist(random(0,Co), Code). % maps list of different 
 
 
 %Show color options
 % C: Number of colors
-showColoroptions(C) :-  write("Color options:"), nl, printColors(C).
+showColoroptions(Co) :-  write("Color options:"), nl, printColors(Co).
 
 %Print colors
 % C: Number of colors
 printColors(0) :- write('blue'), nl.
-printColors(C) :- C1 is C-1, color(C,Color), write(Color), nl, printColors(C1).
+printColors(Co) :- C1 is Co-1, color(Co,Color), write(Color), nl, printColors(C1).
 
 %Color database
 color(0,blue).
@@ -133,18 +153,18 @@ winningGuess([H|T]) :-
     H = 1,
     winningGuess(T).
 
-correctSize(Guess, Size) :- 
-    length(Guess) = Size.
+checkGuess(Guess, Size) :- 
+    length(Guess, Size), winningGuess(Guess).
 
 
 % Game
-% C: Number of colors, S: Size of code, T: Number of tries used, MaxT: Total tries.
-gameloop(C, S, Co, T, MaxT) :- guess(S,C, Co, Res), winningGuess(Res), T < MaxT. - %You win
+% Co: Number of colors, S: Size of code, C: Code in integers, T: Number of tries used, MaxT: Total tries.
+gameloop(Co, S, C, T, MaxT) :- guess(S, C, Co, Res), checkGuess(Res, S), T < MaxT. % You win
 
-gameloop(C, S, Co, T, MaxT) :- guess(S,C, Co, Res), \+ winningGuess(Res), T1 is T+1, T1 < MaxT, gameloop(C, S, Co, T1, MaxT). - %Not the correct code, try again.
+gameloop(Co, S, C, T, MaxT) :- guess(S, C, Co, Res), \+ checkGuess(Res, S), T1 is T+1, T1 < MaxT, gameloop(Co, S, Co, T1, MaxT). % Not the correct code, try again.
 
-gameloop(C, S, Co, T, MaxT) :- guess(S,C, Co, Res), \+ winningGuess(Res), MaxT is T+1. - %Not the correct code, try again.
+gameloop(Co, S, C, T, MaxT) :- guess(S,C, Co, Res), \+ checkGuess(Res, S), MaxT is T+1. % Not the correct code, try again.
 
 
 % Start game
-start :- write('Welcome to my universe - Let us play a very fun game!'),nl, initColor(C), initCodeSize(S), genMaxT(S,C,MaxT), generateCode(S, Co) C1 is C-1, showColoroptions(C1), gameloop(C, S, Co, 0, MaxT).
+start :- write('Welcome to my universe - Let us play a very fun game!'),nl, initColor(Co), initCodeSize(S), genMaxT(S,Co,MaxT), generateCode(S, Co, C), C1 is Co-1, showColoroptions(C1), T is 0, gameloop(Co, S, C, T, MaxT).

@@ -161,7 +161,7 @@ checkGuess(Guess, Size) :-
 % Co: Number of colors, S: Size of code, C: Code in integers, T: Number of tries used, MaxT: Total tries.
 gameloop(Co, S, C, T, MaxT) :- guess(S, C, Co, Res), checkGuess(Res, S), T < MaxT. % You win
 
-gameloop(Co, S, C, T, MaxT) :- guess(S, C, Co, Res), \+ checkGuess(Res, S), T1 is T+1, T1 < MaxT, gameloop(Co, S, Co, T1, MaxT). % Not the correct code, try again.
+gameloop(Co, S, C, T, MaxT) :- guess(S, C, Co, Res), \+ checkGuess(Res, S), T1 is T+1, T1 < MaxT, gameloop(Co, S, C, T1, MaxT). % Not the correct code, try again.
 
 gameloop(Co, S, C, T, MaxT) :- guess(S,C, Co, Res), \+ checkGuess(Res, S), MaxT is T+1. % Not the correct code, try again.
 

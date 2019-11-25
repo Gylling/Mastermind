@@ -48,11 +48,11 @@ parseLine(S, Co, C):-write('Enter your guess: '), readln(Ln), exitCmd(Ln), check
 
 % Checks if line has S colors.
 % Ln: List of colors, S: Number of colors in code,Co: Number of different colors, CLn: Correct input (Output).
-checkLine(Ln, S, Co, Ln ) :- length(Ln, S), checkColors(Ln,Co).
+checkLine(Ln, S, Co, Ln ) :- length(Ln, S),  checkColors(Ln,Co).
 
 checkLine(Ln, S, Co, CLn ) :- length(Ln, S), \+ checkColors(Ln,Co), 
-write('Colors could not be recognized.'),nl, C1 is Co - 1,
-showColoroptions(C1), write('Enter your new guess: '), readln(Ln1), exitCmd(Ln1), checkLine(Ln1,S, Co, CLn).
+write('Colors could not be recognized.'),nl,
+showColoroptions(Co), write('Enter your new guess: '), readln(Ln1), exitCmd(Ln1), checkLine(Ln1,S, Co, CLn).
 
 checkLine(Ln, S, Co, CLn) :- length(Ln, D), dif(S,D), 
 write('You need to provide '),write(S),write(' colors.'),nl, write('Enter your new guess: '), 
@@ -62,7 +62,7 @@ readln(Ln1), exitCmd(Ln1), checkLine(Ln1,S, Co, CLn).
 % Checks if colors in line is found.
 % Ln: List of colors, Co: Number of different colors.
 checkColors([],_).
-checkColors([H|T],Co) :- color(CH,H), -1 < CH, CH < Co, checkColors(T,Co).
+checkColors([H|T],Co) :- C1 is Co+1, color(CH,H), 0 < CH, CH < C1, checkColors(T,Co).
 
 
 % accumulator initilization
@@ -76,11 +76,11 @@ remove([H|T],X,[H|R]):-dif(H,X),remove(T,X,R).
 
 colormatch(_, _, [], []).                           % Base case Alpha omega super mand
 
-colormatch([], [_], [_], []).                       % Base case Beta Batman
+colormatch([], [_], [_], []) :- write('Here2'),nl.                        % Base case Beta Batman
 
-colormatch([_], [], _, []).                         % Base case Gamma Robin - Hende kender vi ikke, måske skal hun bare fjernes
+colormatch([_], [], _, []) :- write('Here3'),nl.                          % Base case Gamma Robin - Hende kender vi ikke, måske skal hun bare fjernes
 
-colormatch([], [], [], []).                         % Base case Omega rosinen i pølseenden
+colormatch([], [], [], []).                           % Base case Omega rosinen i pølseenden
 
 colormatch([_|CodeT], [], Original, Res) :-        % Miss
     colormatch(CodeT, Original, Original, Res).
@@ -90,12 +90,16 @@ colormatch([H|CodeT], [H|_], Original, [0|Res]) :- % hit
 
 colormatch([H|CodeT], [X|MoveT], Original, Res) :- % Elements is not equal 
     dif(H,X), 
+    write([H|CodeT]),nl,
+    write(MoveT), nl,
+    write(Original), nl,
+    write(Res), nl,
     colormatch([H|CodeT], MoveT, Original, Res). 
     
 
 % base case
 posmatch([], [], CodeRes, MoveRes, A, Res) :- 
-    colormatch(CodeRes, MoveRes, MoveRes, Res1), 
+    colormatch(CodeRes, MoveRes, MoveRes, Res1),  
     append(A, Res1, Res).
 % check each element at the same position with each other
 posmatch([H|CodeT], [H|MoveT], CodeRes, MoveRes, A, Res) :- % when color and position match
@@ -120,7 +124,7 @@ guess(S, C, Co, Res) :- parseLine(S,Co,G), matchinit(C, G, Res), write(Res), nl,
 % Code : the resulting randomly generated code
 generateCode(No, Co, Code) :- 
     length(Code, No), % the length of the result must match the number of input 
-    maplist(random(0,Co), Code). % maps list of different 
+    maplist(random(1,Co), Code). % maps list of different 
 
 
 %Show color options
@@ -129,20 +133,20 @@ showColoroptions(Co) :-  write("Color options:"), nl, printColors(Co).
 
 %Print colors
 % C: Number of colors
-printColors(0) :- write('blue'), nl.
+printColors(0) :- nl.
 printColors(Co) :- C1 is Co-1, color(Co,Color), write(Color), nl, printColors(C1).
 
 %Color database
-color(0,blue).
-color(1,green).
-color(2,brown).
-color(3,red).
-color(4,yellow).
-color(5,orange).
-color(6,white).
-color(7,black).
-color(8, grey).
-color(9,purple).
+color(1,blue).
+color(2,green).
+color(3,brown).
+color(4,red).
+color(5,yellow).
+color(6,orange).
+color(7,white).
+color(8,black).
+color(9, grey).
+color(10,purple).
 
 
 
@@ -167,4 +171,4 @@ gameloop(Co, S, C, T, MaxT) :- guess(S,C, Co, Res), \+ checkGuess(Res, S), MaxT 
 
 
 % Start game
-start :- write('Welcome to my universe - Let us play a very fun game!'),nl, initColor(Co), initCodeSize(S), genMaxT(S,Co,MaxT), generateCode(S, Co, C), C1 is Co-1, showColoroptions(C1), T is 0, gameloop(Co, S, C, T, MaxT).
+start :- write('Welcome to my universe - Let us play a very fun game!'),nl, initColor(Co), initCodeSize(S), genMaxT(S,Co,MaxT), generateCode(S, Co, C), showColoroptions(Co), T is 0, gameloop(Co, S, C, T, MaxT).

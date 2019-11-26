@@ -26,7 +26,7 @@ checkSize(A,S) :- A > 10, initCodeSize(S).
 
 % Generate max number of tries
 % S: Size of code, C: Number of colors
-genMaxT(_, _, MaxT) :- MaxT is 20.
+genMaxT(_, _, MaxT) :- MaxT is 5.
 
 
 
@@ -74,28 +74,21 @@ remove([H|T],H,T).
 remove([H|T],X,[H|R]):-dif(H,X),remove(T,X,R).
 
 
-colormatch(_, _, [], []).                           % Base case Alpha omega super mand
+% Base cases
+colormatch([], [], [], []).
+colormatch(_, _, [], []).
+colormatch([], [_], [_], []).
+colormatch([X|[]], [Y|[]], _, []) :- dif(X,Y).
 
-colormatch([], [_], [_], []) :- write('Here2'),nl.                        % Base case Beta Batman
-
-colormatch([_], [], _, []) :- write('Here3'),nl.                          % Base case Gamma Robin - Hende kender vi ikke, måske skal hun bare fjernes
-
-colormatch([], [], [], []).                           % Base case Omega rosinen i pølseenden
-
-colormatch([_|CodeT], [], Original, Res) :-        % Miss
+colormatch([_|CodeT], [], Original, Res) :-        % Not at all to be found in the guess, try next element of the code
     colormatch(CodeT, Original, Original, Res).
 
-colormatch([H|CodeT], [H|_], Original, [0|Res]) :- % hit
+colormatch([H|CodeT], [H|_], Original, [0|Res]) :- % Elements are equal
     remove(Original,H,Ln), colormatch(CodeT, Ln, Ln, Res).
 
-colormatch([H|CodeT], [X|MoveT], Original, Res) :- % Elements is not equal 
+colormatch([H|CodeT], [X|MoveT], Original, Res) :- % Elements are not equal 
     dif(H,X), 
-    write([H|CodeT]),nl,
-    write(MoveT), nl,
-    write(Original), nl,
-    write(Res), nl,
     colormatch([H|CodeT], MoveT, Original, Res). 
-    
 
 % base case
 posmatch([], [], CodeRes, MoveRes, A, Res) :- 
@@ -111,7 +104,7 @@ posmatch([X|CodeT], [Y|MoveT], CodeRes, MoveRes, A, Res) :- %when color and posi
 
 % Guess
 % S: Size of code, C: Code in integers, Co: Number of different colors, Res: Result of guess
-guess(S, C, Co, Res) :- parseLine(S,Co,G), matchinit(C, G, Res), write(Res), nl, write(G), nl, write(C), nl.
+guess(S, C, Co, Res) :- parseLine(S,Co,G), once(matchinit(C, G, Res)), write(Res), nl, write(G), nl, write(C), nl.
 
 
 
@@ -160,14 +153,13 @@ winningGuess([H|T]) :-
 checkGuess(Guess, Size) :- 
     length(Guess, Size), winningGuess(Guess).
 
-
 % Game
 % Co: Number of colors, S: Size of code, C: Code in integers, T: Number of tries used, MaxT: Total tries.
-gameloop(Co, S, C, T, MaxT) :- guess(S, C, Co, Res), checkGuess(Res, S), T < MaxT. % You win
 
-gameloop(Co, S, C, T, MaxT) :- guess(S, C, Co, Res), \+ checkGuess(Res, S), T1 is T+1, T1 < MaxT, gameloop(Co, S, C, T1, MaxT). % Not the correct code, try again.
+gameloop(_, _, _, T, MaxT) :- write(T), MaxT is T+1, nl, write('No more tries left. You lose. Please try again.'). % All tries used, you lose.
+gameloop(Co, S, C, T, MaxT) :- write(T), T1 is T+1, T1 < MaxT, nl, write('This is the normal game loop'), nl, guess(S, C, Co, Res), \+ checkGuess(Res, S), gameloop(Co, S, C, T1, MaxT). % Not the correct code, try again.
+gameloop(_, _, _, T, MaxT) :- write(T), T < MaxT, nl, write('Congrats! You cracked the code!'). % You win
 
-gameloop(Co, S, C, T, MaxT) :- guess(S,C, Co, Res), \+ checkGuess(Res, S), MaxT is T+1. % Not the correct code, try again.
 
 
 % Start game

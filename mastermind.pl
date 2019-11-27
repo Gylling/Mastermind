@@ -9,9 +9,9 @@ initColor(C) :- write('Enter number of colors (min. 2, max. 10) '), readOneChar(
 
 % check if color is out of bounds
 % A: Number of colors (input), C: Number of colors (output)
-checkColor(A,C) :- 1 < A, A < 11, C is A.
-checkColor(A,C) :- 2 > A, initColor(C).
-checkColor(A,C) :- A > 10, initColor(C).
+checkColor(A,C) :- numberDB(A), C is A.
+checkColor(A,C) :- \+ numberDB(A), write('Wrong input'), initColor(C).
+checkColor(A,C) :- \+ numberDB(A), write('Wrong input'), initColor(C).
 
 % init size of code
 % S: Size of code (output)
@@ -19,9 +19,9 @@ initCodeSize(S) :- write('Enter size of code (min. 2, max. 10) '), readOneChar(A
 
 % check if size of code is out of bounds
 % A: Size of code (input), S: Size of code (output)
-checkSize(A,S) :- 1 < A, A < 11, S is A.
-checkSize(A,S) :- 2 > A, initCodeSize(S).
-checkSize(A,S) :- A > 10, initCodeSize(S).
+checkSize(A,S) :- numberDB(A), S is A.
+checkSize(A,S) :- \+ numberDB(A), write('Wrong input'), initCodeSize(S).
+checkSize(A,S) :- \+ numberDB(A), write('Wrong input'), initCodeSize(S).
  
 
 % Generate max number of tries
@@ -55,7 +55,8 @@ write('Colors could not be recognized.'),nl,
 showColoroptions(Co), write('Enter your new guess: '), readln(Ln1), exitCmd(Ln1), checkLine(Ln1,S, Co, CLn).
 
 checkLine(Ln, S, Co, CLn) :- length(Ln, D), dif(S,D), 
-write('You need to provide '),write(S),write(' colors.'),nl, write('Enter your new guess: '), 
+write('You need to provide '),write(S),write(' colors.'),nl,
+write('Enter your new guess: '), nl,
 readln(Ln1), exitCmd(Ln1), checkLine(Ln1,S, Co, CLn).
 
 
@@ -141,6 +142,17 @@ color(8,black).
 color(9, grey).
 color(10,purple).
 
+%Number database
+numberDB(2).
+numberDB(3).
+numberDB(4).
+numberDB(5).
+numberDB(6).
+numberDB(7).
+numberDB(8).
+numberDB(9).
+numberDB(10).
+
 
 
 % Check if the result of match is only 1s (meaning the guess is correct and the game has been won)
@@ -156,9 +168,9 @@ checkGuess(Guess, Size) :-
 % Game
 % Co: Number of colors, S: Size of code, C: Code in integers, T: Number of tries used, MaxT: Total tries.
 
-gameloop(_, _, _, T, MaxT) :- write(T), MaxT is T+1, nl, write('No more tries left. You lose. Please try again.'). % All tries used, you lose.
-gameloop(Co, S, C, T, MaxT) :- write(T), T1 is T+1, T1 < MaxT, nl, write('This is the normal game loop'), nl, guess(S, C, Co, Res), \+ checkGuess(Res, S), gameloop(Co, S, C, T1, MaxT). % Not the correct code, try again.
-gameloop(_, _, _, T, MaxT) :- write(T), T < MaxT, nl, write('Congrats! You cracked the code!'). % You win
+gameloop(_, _, _, T, MaxT) :-  MaxT is T, write('No more tries left. You lose. Please try again.'). % All tries used, you lose.
+gameloop(Co, S, C, T, MaxT) :- T < MaxT, guess(S, C, Co, Res), \+ checkGuess(Res, S), T1 is T+1, write('Number of tries: '), write(T1), nl, gameloop(Co, S, C, T1, MaxT). % Not the correct code, try again.
+gameloop(_, _, _, T, MaxT) :- T < MaxT, write('Number of tries: '),T1 is T+1, write(T1), nl, write('Congrats! You cracked the code!'). % You win
 
 
 

@@ -5,28 +5,28 @@ readOneChar(I) :- readln([I|_]).
 
 % init number of colors
 % C: Number of colors (output)
-initColor(C) :- write('Enter number of colors (min. 2, max. 10) '), readOneChar(A), checkColor(A,C).
+initColor(C) :- nl, write('Enter number of colors (min. 2, max. 10) '), readOneChar(A), checkColor(A,C).
 
 % check if color is out of bounds
 % A: Number of colors (input), C: Number of colors (output)
 checkColor(A,C) :- numberDB(A), C is A.
-checkColor(A,C) :- \+ numberDB(A), write('Wrong input'), initColor(C).
-checkColor(A,C) :- \+ numberDB(A), write('Wrong input'), initColor(C).
+checkColor(A,C) :- \+ numberDB(A), nl, write('Wrong input'), nl, initColor(C).
+checkColor(A,C) :- \+ numberDB(A), nl, write('Wrong input'), nl, initColor(C).
 
 % init size of code
 % S: Size of code (output)
-initCodeSize(S) :- write('Enter size of code (min. 2, max. 10) '), readOneChar(A), checkSize(A,S).
+initCodeSize(S) :- nl, write('Enter size of code (min. 2, max. 10) '), readOneChar(A), checkSize(A,S).
 
 % check if size of code is out of bounds
 % A: Size of code (input), S: Size of code (output)
 checkSize(A,S) :- numberDB(A), S is A.
-checkSize(A,S) :- \+ numberDB(A), write('Wrong input'), initCodeSize(S).
-checkSize(A,S) :- \+ numberDB(A), write('Wrong input'), initCodeSize(S).
+checkSize(A,S) :- \+ numberDB(A), nl, write('Wrong input'), nl, initCodeSize(S).
+checkSize(A,S) :- \+ numberDB(A), nl, write('Wrong input'), nl, initCodeSize(S).
  
 
 % Generate max number of tries
 % S: Size of code, C: Number of colors
-genMaxT(_, _, MaxT) :- MaxT is 5.
+genMaxT(S, C, MaxT) :- MaxT is S*C-S, nl, write('You have '), write(MaxT), write(' tries to crack the code.'), nl.
 
 
 
@@ -44,19 +44,19 @@ exitCmd([exit]) :- halt.
 % Parse line from colors to integers. 
 % S: Size of code, Co: Number of different colors, C: Code in integers
 % parseLine(_, _, _) :-write('Enter your guess: '), readln([exit]), halt.
-parseLine(S, Co, C):-write('Enter your guess: '), readln(Ln), exitCmd(Ln), checkLine(Ln,S,Co, CLn), colToInt(CLn,C).
+parseLine(S, Co, C):-nl, write('Enter your guess: '), readln(Ln), exitCmd(Ln), checkLine(Ln,S,Co, CLn), colToInt(CLn,C).
 
 % Checks if line has S colors.
 % Ln: List of colors, S: Number of colors in code,Co: Number of different colors, CLn: Correct input (Output).
 checkLine(Ln, S, Co, Ln ) :- length(Ln, S),  checkColors(Ln,Co).
 
 checkLine(Ln, S, Co, CLn ) :- length(Ln, S), \+ checkColors(Ln,Co), 
-write('Colors could not be recognized.'),nl,
-showColoroptions(Co), write('Enter your new guess: '), readln(Ln1), exitCmd(Ln1), checkLine(Ln1,S, Co, CLn).
+nl,write('Colors could not be recognized.'),nl,
+nl,showColoroptions(Co),nl, write('Enter your new guess: '), readln(Ln1), exitCmd(Ln1), checkLine(Ln1,S, Co, CLn).
 
 checkLine(Ln, S, Co, CLn) :- length(Ln, D), dif(S,D), 
-write('You need to provide '),write(S),write(' colors.'),nl,
-write('Enter your new guess: '), nl,
+nl,write('You need to provide '),write(S),write(' colors.'),nl,
+write('Enter your new guess: '), 
 readln(Ln1), exitCmd(Ln1), checkLine(Ln1,S, Co, CLn).
 
 
@@ -69,7 +69,7 @@ checkColors([H|T],Co) :- C1 is Co+1, color(CH,H), 0 < CH, CH < C1, checkColors(T
 % accumulator initilization
 matchinit(Code, Move, Res) :- posmatch(Code, Move, [], [], [], Res).
 
-
+% Remove the first element of X from a list. 
 remove([],_,[]).
 remove([H|T],H,T).
 remove([H|T],X,[H|R]):-dif(H,X),remove(T,X,R).
@@ -118,7 +118,8 @@ guess(S, C, Co, Res) :- parseLine(S,Co,G), once(matchinit(C, G, Res)), write(Res
 % Code : the resulting randomly generated code
 generateCode(No, Co, Code) :- 
     length(Code, No), % the length of the result must match the number of input 
-    maplist(random(1,Co), Code). % maps list of different 
+    Co1 is Co+1, %increment so the biggest number is included
+    maplist(random(1,Co1), Code). % maps list of different 
 
 
 %Show color options
@@ -127,7 +128,7 @@ showColoroptions(Co) :-  write("Color options:"), nl, printColors(Co).
 
 %Print colors
 % C: Number of colors
-printColors(0) :- nl.
+printColors(0).
 printColors(Co) :- C1 is Co-1, color(Co,Color), write(Color), nl, printColors(C1).
 
 %Color database
@@ -165,14 +166,37 @@ winningGuess([H|T]) :-
 checkGuess(Guess, Size) :- 
     length(Guess, Size), winningGuess(Guess).
 
+
+%Play again?
+playagain :- nl, write('Do you want to play again? (yes/no) '),readln(Ln), checkPaInput(Ln). 
+
+checkPaInput([H|_]) :- H = 'yes', init.
+checkPaInput([H|_]) :- H = 'no'.
+checkPaInput([H|_]) :- dif(H,'yes'), dif(H,'no'),nl,nl, write('Please write yes or no. '),readln(Ln),checkPaInput(Ln).
+
 % Game
 % Co: Number of colors, S: Size of code, C: Code in integers, T: Number of tries used, MaxT: Total tries.
 
-gameloop(_, _, _, T, MaxT) :-  MaxT is T, write('No more tries left. You lose. Please try again.'). % All tries used, you lose.
+gameloop(_, _, _, T, MaxT) :-  MaxT is T, write('No more tries left. You lose. Please try again.'),nl, playagain, halt. % All tries used, you lose.
 gameloop(Co, S, C, T, MaxT) :- T < MaxT, guess(S, C, Co, Res), \+ checkGuess(Res, S), T1 is T+1, write('Number of tries: '), write(T1), nl, gameloop(Co, S, C, T1, MaxT). % Not the correct code, try again.
-gameloop(_, _, _, T, MaxT) :- T < MaxT, write('Number of tries: '),T1 is T+1, write(T1), nl, write('Congrats! You cracked the code!'). % You win
+gameloop(_, _, _, T, MaxT) :- T < MaxT, write('Number of tries: '),T1 is T+1, write(T1), nl,nl, write('Congrats! You cracked the code!'), nl, playagain, halt. % You win
 
+% Rules
+printRules :- write('The rules are simple.'), nl,
+write('You choose a size for a code and how many different colors the code can be made of.'), nl,
+write('You have limited number of tries to break a code.'),nl, 
+write('The number of tries is scaling with the size and number of colors you choose.'), nl,
+write('You will enter a guess for each try. You shall write colors with lowercase letters seperated by spaces.'), nl, 
+write('A code of the size 4 will expect your guesses to be of the format: "<color> <color> <color> <color>"'), nl, nl,
 
+write('You will get a list of hints back for each guess.'), nl,
+write('If you have a correct color but a wrong position then you will see a 0 in the list.'), nl,
+write('If you have a correct color and position then you will see a 1 in the list.'), nl,
+write('You will see an empty list, if you do not have anything correct'), nl,
+write('Now you are ready to play.'), nl.
+
+%init game
+init :- initColor(Co), initCodeSize(S), genMaxT(S,Co,MaxT), generateCode(S, Co, C), nl, showColoroptions(Co), T is 0, gameloop(Co, S, C, T, MaxT).
 
 % Start game
-start :- write('Welcome to my universe - Let us play a very fun game!'),nl, initColor(Co), initCodeSize(S), genMaxT(S,Co,MaxT), generateCode(S, Co, C), showColoroptions(Co), T is 0, gameloop(Co, S, C, T, MaxT).
+start :- write('Welcome to my universe - Let us play a very fun game!'),nl,nl,printRules,nl, init.

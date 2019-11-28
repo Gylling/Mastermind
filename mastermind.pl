@@ -11,22 +11,29 @@ initColor(C) :- nl, write('Enter number of colors (min. 2, max. 10) '), readOneC
 % A: Number of colors (input), C: Number of colors (output)
 checkColor(A,C) :- numberDB(A), C is A.
 checkColor(A,C) :- \+ numberDB(A), nl, write('Wrong input'), nl, initColor(C).
-checkColor(A,C) :- \+ numberDB(A), nl, write('Wrong input'), nl, initColor(C).
+%checkColor(A,C) :- \+ numberDB(A), nl, write('Wrong input'), nl, initColor(C).
 
 % init size of code
 % S: Size of code (output)
 initCodeSize(S) :- nl, write('Enter size of code (min. 2, max. 10) '), readOneChar(A), checkSize(A,S).
 
+initDifficulty(S) :- nl, printMenu, readOneChar(D), checkDifficulty(D, S).
+
+checkDifficulty(D, S) :- diffDB(D), S is D.
+checkDifficulty(D, S) :- \+ diffDB(D), nl, write('Not an option.'), nl, initDifficulty(S).
+
 % check if size of code is out of bounds
 % A: Size of code (input), S: Size of code (output)
 checkSize(A,S) :- numberDB(A), S is A.
 checkSize(A,S) :- \+ numberDB(A), nl, write('Wrong input'), nl, initCodeSize(S).
-checkSize(A,S) :- \+ numberDB(A), nl, write('Wrong input'), nl, initCodeSize(S).
+%checkSize(A,S) :- \+ numberDB(A), nl, write('Wrong input'), nl, initCodeSize(S).
  
 
 % Generate max number of tries
-% S: Size of code, C: Number of colors
-genMaxT(S, C, MaxT) :- MaxT is S*C-S, nl, write('You have '), write(MaxT), write(' tries to crack the code.'), nl.
+% S: Size of code, C: Number of colors, D : Difficulty (1 - easy, 2 - medium, 3 - hard)
+genMaxT(S, C, 3, MaxT) :- MaxT is round((S*C-S)*(3/4)), nl, write('You have '), write(MaxT), write(' tries to crack the code.'), nl.
+genMaxT(S, C, 2, MaxT) :- MaxT is round((S*C-S)*(1)), nl, write('You have '), write(MaxT), write(' tries to crack the code.'), nl.
+genMaxT(S, C, 1, MaxT) :- MaxT is round((S*C-S)*(5/4)), nl, write('You have '), write(MaxT), write(' tries to crack the code.'), nl.
 
 
 
@@ -143,6 +150,10 @@ color(8,black).
 color(9, grey).
 color(10,purple).
 
+diffDB(1).
+diffDB(2).
+diffDB(3).
+
 %Number database
 numberDB(2).
 numberDB(3).
@@ -176,7 +187,6 @@ checkPaInput([H|_]) :- dif(H,'yes'), dif(H,'no'),nl,nl, write('Please write yes 
 
 % Game
 % Co: Number of colors, S: Size of code, C: Code in integers, T: Number of tries used, MaxT: Total tries.
-
 gameloop(_, _, _, T, MaxT) :-  MaxT is T, write('No more tries left. You lose. Please try again.'),nl, playagain, halt. % All tries used, you lose.
 gameloop(Co, S, C, T, MaxT) :- T < MaxT, guess(S, C, Co, Res), \+ checkGuess(Res, S), T1 is T+1, write('Number of tries: '), write(T1), nl, gameloop(Co, S, C, T1, MaxT). % Not the correct code, try again.
 gameloop(_, _, _, T, MaxT) :- T < MaxT, write('Number of tries: '),T1 is T+1, write(T1), nl,nl, write('Congrats! You cracked the code!'), nl, playagain, halt. % You win
@@ -193,10 +203,16 @@ write('You will get a list of hints back for each guess.'), nl,
 write('If you have a correct color but a wrong position then you will see a 0 in the list.'), nl,
 write('If you have a correct color and position then you will see a 1 in the list.'), nl,
 write('You will see an empty list, if you do not have anything correct'), nl,
-write('Now you are ready to play.'), nl.
+write('Now you are ready to play.'), nl, nl,
+write('If you get tired of playing, you can always write exit to quit the game.').
+
+printMenu :- write('You can choose between the following difficulties:'), nl,
+write('1. Easy'), nl,
+write('2. Medium'), nl,
+write('3. Hard'), nl.
 
 %init game
-init :- initColor(Co), initCodeSize(S), genMaxT(S,Co,MaxT), generateCode(S, Co, C), nl, showColoroptions(Co), T is 0, gameloop(Co, S, C, T, MaxT).
+init :- initColor(Co), initCodeSize(S), initDifficulty(D), genMaxT(S,Co,D,MaxT), generateCode(S, Co, C), nl, showColoroptions(Co), T is 0, gameloop(Co, S, C, T, MaxT).
 
 % Start game
 start :- write('Welcome to my universe - Let us play a very fun game!'),nl,nl,printRules,nl, init.

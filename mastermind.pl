@@ -17,8 +17,10 @@ checkColor(A,C) :- \+ numberDB(A), nl, write('Wrong input'), nl, initColor(C).
 % S: Size of code (output)
 initCodeSize(S) :- nl, write('Enter size of code (min. 2, max. 10) '), readOneChar(A), checkSize(A,S).
 
+% init user to choose difficulty of game: by printing menu, reading input and checking the input against the database
 initDifficulty(S) :- nl, printMenu, readOneChar(D), checkDifficulty(D, S).
 
+% matches the input with the options of difficulties
 checkDifficulty(D, S) :- diffDB(D), S is D.
 checkDifficulty(D, S) :- \+ diffDB(D), nl, write('Not an option.'), nl, initDifficulty(S).
 
@@ -73,7 +75,10 @@ checkColors([],_).
 checkColors([H|T],Co) :- C1 is Co+1, color(CH,H), 0 < CH, CH < C1, checkColors(T,Co).
 
 
-% accumulator initilization
+% Accumulator initilization of function to that checks if there are colors in correct position
+% Code : The computer generated game code.
+% Move : The move made by the user.
+% Res  : The pints resulting from the guess (1 representing red - ie. correct color+pos, 0 representing white - ie. corret color only).
 matchinit(Code, Move, Res) :- posmatch(Code, Move, [], [], [], Res).
 
 % Remove the first element of X from a list. 
@@ -88,7 +93,7 @@ colormatch(_, _, [], []).
 colormatch([], [_], [_], []).
 colormatch([X|[]], [Y|[]], _, []) :- dif(X,Y).
 
-colormatch([_|CodeT], [], Original, Res) :-        % Not at all to be found in the guess, try next element of the code
+colormatch([_|CodeT], [], Original, Res) :-        % Not at all to be found in the move, try next element of the code
     colormatch(CodeT, Original, Original, Res).
 
 colormatch([H|CodeT], [H|_], Original, [0|Res]) :- % Elements are equal
@@ -98,14 +103,16 @@ colormatch([H|CodeT], [X|MoveT], Original, Res) :- % Elements are not equal
     dif(H,X), 
     colormatch([H|CodeT], MoveT, Original, Res). 
 
-% base case
+% base case, when we have iterated through all of the code and the user move, 
+% then call colormatch with the updated code, move and results found from posmatch,
+% to see if we have colors that are correct but not in right position
 posmatch([], [], CodeRes, MoveRes, A, Res) :- 
     colormatch(CodeRes, MoveRes, MoveRes, Res1),  
     append(A, Res1, Res).
 % check each element at the same position with each other
-posmatch([H|CodeT], [H|MoveT], CodeRes, MoveRes, A, Res) :- % when color and position match
+posmatch([H|CodeT], [H|MoveT], CodeRes, MoveRes, A, Res) :- % when color and position match, add 1 to result (representing red pin)
     posmatch(CodeT, MoveT, CodeRes, MoveRes, [1|A], Res).
-posmatch([X|CodeT], [Y|MoveT], CodeRes, MoveRes, A, Res) :- %when color and position don't match - 
+posmatch([X|CodeT], [Y|MoveT], CodeRes, MoveRes, A, Res) :- % when color and position don't match - 
     dif(X,Y),
     posmatch(CodeT, MoveT, [X|CodeRes], [Y|MoveRes], A, Res).
 
